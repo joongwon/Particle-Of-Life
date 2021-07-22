@@ -6,6 +6,10 @@
 #include <numbers>
 #include <future>
 
+
+#undef NDEBUG
+#include <cassert>
+
 #pragma warning(disable: 26451)
 
 
@@ -32,13 +36,13 @@ void joongwon::ParticleOfLife::draw(sf::RenderTarget &target, sf::RenderStates s
     }
     target.draw(va, states);
 
-    for (auto &region : regions_) {
-        for (auto &particle : region) {
-            sf::CircleShape circle(2.5f);
-            circle.move(sf::Vector2f(particle.position));
-            circle.setFillColor(color_table_[particle.type]);
-            target.draw(circle, states);
-        }
+    for (auto &particle : particles_) {
+        if (particle.type == types_count_)
+            continue;
+        sf::CircleShape circle(2.5f);
+        circle.move(sf::Vector2f(particle.position));
+        circle.setFillColor(color_table_[particle.type]);
+        target.draw(circle, states);
     }
 }
 
@@ -57,6 +61,44 @@ joongwon::Vector2d joongwon::ParticleOfLife::acceleration(const Particle &p1, co
     else
         return { 0.f, 0.f };
     return d * (magnitude / x);
+}
+
+void joongwon::ParticleOfLife::accelerate(Particle &particle, double dt)
+{
+    auto size = get_size();
+    int x = std::floor(particle.position.x / region_size);
+    int y = std::floor(particle.position.y / region_size);
+    int i = y * regions_x_count + x;
+    for (int xd = -1; xd <= 1; xd++)
+        for (int yd = -1; yd <= 1; yd++) {
+            Vector2d offset = { 0.f,0.f };
+            int xyou = x + xd;
+            if (xyou < 0) {
+                xyou += regions_x_count;
+                offset.x += size.x;
+            }
+            else if (xyou >= regions_x_count) {
+                xyou -= regions_x_count;
+                offset.x -= size.x;
+            }
+            int yyou = y + yd;
+            if (yyou < 0) {
+                yyou += regions_y_count;
+                offset.y += size.y;
+            }
+            else if (yyou >= regions_y_count) {
+                yyou -= regions_y_count;
+                offset.y -= size.y;
+            }
+
+            int iyou = yyou * regions_x_count + xyou;
+            for (int i = region_borders[iyou]; i < region_borders[iyou + 1]; i++) {
+                auto you = particles_[i];
+                if (&particle == &(particles_[i])) continue;
+                you.position -= offset;
+                particle.velocity += acceleration(particle, you) * dt;
+            }
+        }
 }
 
 joongwon::ParticleOfLife::ParticleOfLife()
@@ -110,12 +152,13 @@ void joongwon::ParticleOfLife::generateRandomParticleTypes(int n)
         color_table_.push_back(std::move(color));
     }
 
-    regions_.clear();
+    region_borders.clear();
 }
 
 void joongwon::ParticleOfLife::generateRandomParticles(int n)
 {
-    regions_.assign(regions_x_count * regions_y_count, {});
+    particles_.clear();
+
     std::uniform_real_distribution<double> dist_x(0, regions_x_count * region_size);
     std::uniform_real_distribution<double> dist_y(0, regions_y_count * region_size);
     std::uniform_int_distribution<> dist_type(0, types_count_ - 1);
@@ -125,9 +168,11 @@ void joongwon::ParticleOfLife::generateRandomParticles(int n)
             .position = {dist_x(random_engine), dist_y(random_engine)},
             .velocity = {0,0}
         };
-        int ix = std::floor(particle.position.x / region_size);
-        int iy = std::floor(particle.position.y / region_size);
-        regions_[iy * regions_x_count + ix].push_back(std::move(particle));
+        int xnew = std::floor(particle.position.x / region_size);
+        int ynew = std::floor(particle.position.y / region_size);
+        int inew = ynew * regions_x_count + xnew;
+        particle.region = inew;
+        particles_.push_back(particle);
     }
 }
 
@@ -135,87 +180,58 @@ void joongwon::ParticleOfLife::advance(double dt)
 {
     auto size = get_size();
 
-#define POL_CONCURRENT
+    std::sort(particles_.begin(), particles_.end(), [](auto a, auto b) { return a.region < b.region; });
 
-#ifdef POL_CONCURRENT
+    region_borders.assign(regions_x_count * regions_y_count + 1, 0);
+    int last_region = 0;
+    for (int i = 1; i < particles_.size(); i++) {
+        while (last_region < particles_[i].region) {
+            region_borders[++last_region] = i;
+        }
+    }
+    region_borders.back() = particles_.size();
+
+#define CONCURRENT
+
     std::vector<std::future<void>> futures;
-#endif
 
-    int n = std::thread::hardware_concurrency() * 1;
+    int n = std::thread::hardware_concurrency() * 3;
     for (int i = 0; i < n; i++) {
-        int start = (regions_x_count * i / n);
-        int end = (regions_x_count * (i + 1) / n);
-#ifdef POL_CONCURRENT
+        int begin = particles_.size() * i / n;
+        int end = particles_.size() * (i + 1) / n;
+#ifdef CONCURRENT
         futures.push_back(std::async([=]() {
 #endif
-            for (int xme = start; xme < end; xme++) {
-                    for (int yme = 0; yme < regions_y_count; yme++)
-                        for (auto &me : regions_[yme * regions_x_count + xme])
-                            for (int xd = -1; xd <= 1; xd++)
-                                for (int yd = -1; yd <= 1; yd++) {
-                                    Vector2d offset = { 0.f,0.f };
-                                    int xyou = xme + xd;
-                                    if (xyou < 0) {
-                                        xyou += regions_x_count;
-                                        offset.x += size.x;
-                                    }
-                                    else if (xyou >= regions_x_count) {
-                                        xyou -= regions_x_count;
-                                        offset.x -= size.x;
-                                    }
-                                    int yyou = yme + yd;
-                                    if (yyou < 0) {
-                                        yyou += regions_y_count;
-                                        offset.y += size.y;
-                                    }
-                                    else if (yyou >= regions_y_count) {
-                                        yyou -= regions_y_count;
-                                        offset.y -= size.y;
-                                    }
-                                    for (auto you : regions_[yyou * regions_x_count + xyou]) {
-                                        if (&me == &you) continue;
-                                        you.position -= offset;
-                                        me.velocity += acceleration(me, you) * dt;
-                                    }
-                                }
+            for (int j = begin; j < end; j++) {
+                accelerate(particles_[j], dt);
             }
-#ifdef POL_CONCURRENT
+#ifdef CONCURRENT
         }));
 #endif
     }
-#ifdef POL_CONCURRENT
-    for (auto &future : futures) {
-        future.wait();
+    while (!futures.empty()) {
+        futures.back().wait();
+        futures.pop_back();
     }
-#endif
 
-    std::vector<std::pair<int, Particle>> moved_particles;
-    for (int i = 0; i < regions_x_count * regions_y_count; i++) {
-            auto &region = regions_[i];
-            for (auto it = region.begin(); it != region.end(); ) {
-                it->velocity *= (1 - friction);
-                it->position += it->velocity * dt;
-                it->position.x = std::fmod(it->position.x, size.x);
-                it->position.y = std::fmod(it->position.y, size.y);
-                if (it->position.x < 0)
-                    it->position.x += size.x;
-                if (it->position.y < 0)
-                    it->position.y += size.y;
+    for (auto &particle : particles_) {
+        particle.velocity *= (1 - friction);
+        particle.position += particle.velocity * dt;
+        // particle.position.x = std::fmod(particle.position.x, size.x);
+        // particle.position.y = std::fmod(particle.position.y, size.y);
+        if (particle.position.x < 0)
+            particle.position.x += size.x;
+        else if (particle.position.x >= size.x)
+            particle.position.x -= size.x;
+        if (particle.position.y < 0)
+            particle.position.y += size.y;
+        else if (particle.position.y >= size.y)
+            particle.position.y -= size.y;
 
-                int xnew = std::floor(it->position.x / region_size);
-                int ynew = std::floor(it->position.y / region_size);
-                int inew = ynew * regions_x_count + xnew;
-                if (i != inew) {
-                    moved_particles.emplace_back(std::move(inew), std::move(*it));
-                    it = region.erase(it);
-                }
-                else {
-                    it++;
-                }
-            }
-        }
-    for (auto &[i, particle] : moved_particles) {
-        regions_[i].push_back(std::move(particle));
+        int xnew = std::floor(particle.position.x / region_size);
+        int ynew = std::floor(particle.position.y / region_size);
+        int inew = ynew * regions_x_count + xnew;
+        particle.region = inew;
     }
 }
 

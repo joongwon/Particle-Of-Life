@@ -18,19 +18,22 @@ struct Particle {
     int type;
     Vector2d position;
     Vector2d velocity;
+    int region;
 };
 
 class ParticleOfLife : public sf::Drawable, public sf::Transformable
 {
     std::vector<Force> force_table_;
     std::vector<sf::Color> color_table_;
-    std::vector<std::list<Particle>> regions_;
+    std::vector<Particle> particles_;
+    std::vector<int> region_borders;
     int types_count_ = 0;
 
     // Inherited via Drawable
     virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     Vector2d acceleration(const Particle &p1, const Particle &p2) const noexcept;
+    void accelerate(Particle &p, double dt);
 
 public:
     double repulsion_strength = 100.f;
