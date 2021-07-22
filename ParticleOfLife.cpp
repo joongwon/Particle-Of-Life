@@ -3,8 +3,8 @@
 #include <random>
 #include <cmath>
 #include <utility>
-#include <numbers>
 #include <future>
+#include <numeric>
 
 
 #undef NDEBUG
@@ -196,13 +196,29 @@ void joongwon::ParticleOfLife::advance(double dt)
     std::vector<std::future<void>> futures;
 
     int n = std::thread::hardware_concurrency() * 3;
+    std::vector<int> tasks_count = { 0 };
+    for (int i = 1; i < region_borders.size(); i++) {
+        int region_size = region_borders[i] - region_borders[i - 1];
+        tasks_count.push_back(tasks_count.back() + region_size * region_size);
+    }
+    
+    int region_begin, region_end = 0;
+    int particle_begin, particle_end = 0;
     for (int i = 0; i < n; i++) {
-        int begin = particles_.size() * i / n;
-        int end = particles_.size() * (i + 1) / n;
+        region_begin = region_end;
+        int goal = tasks_count.back() * (i + 1) / n;
+        for (; tasks_count[region_end] < goal; region_end++)
+            continue;
+
+        particle_begin = particle_end;
+        particle_end = region_borders[region_end - 1]
+            + (region_borders[region_end] - region_borders[region_end - 1])
+            * ((0. + goal - tasks_count[region_end - 1]) / (tasks_count[region_end] - tasks_count[region_end - 1]));
+
 #ifdef CONCURRENT
         futures.push_back(std::async([=]() {
 #endif
-            for (int j = begin; j < end; j++) {
+            for (int j = particle_begin; j < particle_end; j++) {
                 accelerate(particles_[j], dt);
             }
 #ifdef CONCURRENT
