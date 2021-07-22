@@ -11,8 +11,7 @@ Cellular Automata(세포자동자)를 변형한 것으로, 세포가 격자에 �
 마우스로 아무데나 클릭하면 새로운 상호작용을 생성하고 입자들 또한 새로 생성한다.
 
 ## 설정
-* config.txt에서 값을 수정할 수 있다.
-* 이름(기본값): 설명
+config.txt에서 값을 수정할 수 있다. 이름(기본값): 설명
  * effective_radius(5.0): 입자의 크기 및 기본 반발력의 범위
  * friction(0.01): 마찰 계수
  * maximum_interaction_distance(80.0): 상호작용의 최대 범위
