@@ -211,9 +211,9 @@ void joongwon::ParticleOfLife::advance(double dt)
             continue;
 
         particle_begin = particle_end;
-        particle_end = region_borders[region_end - 1]
+        particle_end = std::floor(region_borders[region_end - 1]
             + (region_borders[region_end] - region_borders[region_end - 1])
-            * ((0. + goal - tasks_count[region_end - 1]) / (tasks_count[region_end] - tasks_count[region_end - 1]));
+            * std::sqrt(((0. + goal - tasks_count[region_end - 1]) / (tasks_count[region_end] - tasks_count[region_end - 1]))));
 
 #ifdef CONCURRENT
         futures.push_back(std::async([=]() {
@@ -233,8 +233,6 @@ void joongwon::ParticleOfLife::advance(double dt)
     for (auto &particle : particles_) {
         particle.velocity *= (1 - friction);
         particle.position += particle.velocity * dt;
-        // particle.position.x = std::fmod(particle.position.x, size.x);
-        // particle.position.y = std::fmod(particle.position.y, size.y);
         if (particle.position.x < 0)
             particle.position.x += size.x;
         else if (particle.position.x >= size.x)
