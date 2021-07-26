@@ -27,6 +27,9 @@
     <ClCompile Include="myutil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ParticleOfLife.h">
@@ -38,9 +41,15 @@
     <ClInclude Include="myutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="ParticleOfLife.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="buttons.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
