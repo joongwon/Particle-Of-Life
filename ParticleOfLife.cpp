@@ -39,7 +39,7 @@ void joongwon::ParticleOfLife::draw(sf::RenderTarget &target, sf::RenderStates s
     for (auto &particle : particles_) {
         if (particle.type == types_count_)
             continue;
-        sf::CircleShape circle(2.5f);
+        sf::CircleShape circle(visible_radius);
         circle.move(sf::Vector2f(particle.position));
         circle.setFillColor(color_table_[particle.type]);
         target.draw(circle, states);
@@ -116,6 +116,7 @@ void joongwon::ParticleOfLife::configure(const ParticleOfLifeConfig &config)
     friction = config.friction;
     maximum_interaction_distance = config.maximum_interaction_distance;
     maximum_interaction_strength = config.maximum_interaction_strength;
+    visible_radius = config.visible_radius;
 }
 
 void joongwon::ParticleOfLife::generateRandomParticleTypes(int n)

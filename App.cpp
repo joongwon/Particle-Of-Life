@@ -17,6 +17,8 @@ void App::configureLife()
     life.configure(config);
     types_count = config.type_count;
     particles_count = config.particle_count;
+    minimum_frame_length = 1. / config.maximum_fps;
+    maximum_frame_length = minimum_frame_length * 2;
 }
 
 void App::createWindow()
@@ -152,10 +154,15 @@ void App::runEventLoop()
 
         if (!pause) {
             seconds += frame_counter.restart().asSeconds();
-            life.advance(0.01);
-            int fps = std::round(1 / seconds);
-            fps_display.setString(std::to_string(fps));
-            seconds = 0.f;
+            if (seconds >= minimum_frame_length) {
+                if (seconds > maximum_frame_length)
+                    life.advance(maximum_frame_length);
+                else
+                    life.advance(seconds);
+                int fps = std::round(1 / seconds);
+                fps_display.setString(std::to_string(fps));
+                seconds = 0.f;
+            }
         }
 
         // redraw

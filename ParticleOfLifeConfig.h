@@ -16,6 +16,8 @@ struct ParticleOfLifeConfig
     double maximum_interaction_strength = 10.f;
     int type_count = 5;
     int particle_count = 1000;
+    int maximum_fps = 120;
+    double visible_radius = 5.f;
     void load_from_file(const std::string &file_name);
 };
 

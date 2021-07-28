@@ -44,6 +44,7 @@ public:
     double friction = 0.01f;
     double maximum_interaction_distance = 40.f;
     double maximum_interaction_strength = 10.f;
+    double visible_radius = 5.f;
     ParticleOfLife();
     void configure(const ParticleOfLifeConfig &config);
 

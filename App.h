@@ -29,6 +29,8 @@ class App
     float seconds = 0;
     sf::Clock frame_counter;
     sf::RectangleShape button_background;
+    double minimum_frame_length;
+    double maximum_frame_length;
 
 public:
     void init();
