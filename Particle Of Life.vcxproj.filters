@@ -24,10 +24,13 @@
     <ClCompile Include="ParticleOfLifeConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="myutil.cpp">
+    <ClCompile Include="apicall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,18 +41,18 @@
     <ClInclude Include="ParticleOfLifeConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="myutil.h">
+    <ClInclude Include="apicall.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Button.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="App.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="ParticleOfLife.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="buttons.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

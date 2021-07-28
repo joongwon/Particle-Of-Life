@@ -19,21 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="App.cpp" />
     <ClCompile Include="Button.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="myutil.cpp" />
+    <ClCompile Include="apicall.cpp" />
     <ClCompile Include="ParticleOfLife.cpp" />
     <ClCompile Include="ParticleOfLifeConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="App.h" />
     <ClInclude Include="Button.h" />
-    <ClInclude Include="myutil.h" />
+    <ClInclude Include="apicall.h" />
     <ClInclude Include="ParticleOfLife.h" />
     <ClInclude Include="ParticleOfLifeConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="ParticleOfLife.png" />
-    <Image Include="buttons.png" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />

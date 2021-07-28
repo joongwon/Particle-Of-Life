@@ -8,10 +8,12 @@ namespace joongwon {
     {
     public:
         void process_event(sf::Window &window, const sf::Event &e);
-        std::function<void()> event_handler;
-        sf::Sprite sprite_clicked;
-        sf::Sprite sprite_unclicked;
+        std::function<void(Button *)> event_handler;
+        sf::Text text;
+        sf::Color color_clicked = sf::Color::Green;
+        sf::Color color_unclicked = sf::Color::White;
         bool clicked = false;
+        bool in_bounds = false;
 
         // Inherited via Drawable
         virtual void draw(sf::RenderTarget & target, sf::RenderStates states) const override;

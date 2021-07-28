@@ -53,7 +53,9 @@ public:
 
     Vector2d get_window_size() const noexcept;
     Vector2d get_size() const noexcept;
+
+    void printTypesTo(std::ostream &os) const;
+    void scanTypesFrom(std::istream &is);
 };
 
 }
-

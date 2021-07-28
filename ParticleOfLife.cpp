@@ -127,11 +127,11 @@ void joongwon::ParticleOfLife::generateRandomParticleTypes(int n)
     force_table_.clear();
     color_table_.clear();
 
-    std::uniform_real_distribution<> dist_scale(-1,1);
+    std::uniform_real_distribution<> dist_scale(-1, 1);
     std::uniform_real_distribution<float> dist_distance(0, maximum_interaction_distance);
     std::uniform_int_distribution<std::uint32_t> dist_color;
-    
-    for (int i = 0; i < n*n; i++) {
+
+    for (int i = 0; i < n * n; i++) {
         force_table_.emplace_back(
             dist_scale(random_engine) * maximum_interaction_strength,
             dist_distance(random_engine)
@@ -201,7 +201,7 @@ void joongwon::ParticleOfLife::advance(double dt)
         int region_size = region_borders[i] - region_borders[i - 1];
         tasks_count.push_back(tasks_count.back() + region_size * region_size);
     }
-    
+
     int region_begin, region_end = 0;
     int particle_begin, particle_end = 0;
     for (int i = 0; i < n; i++) {
@@ -222,7 +222,7 @@ void joongwon::ParticleOfLife::advance(double dt)
                 accelerate(particles_[j], dt);
             }
 #ifdef CONCURRENT
-        }));
+            }));
 #endif
     }
     while (!futures.empty()) {
@@ -258,6 +258,54 @@ joongwon::Vector2d joongwon::ParticleOfLife::get_window_size() const noexcept
 joongwon::Vector2d joongwon::ParticleOfLife::get_size() const noexcept
 {
     return { region_size * regions_x_count, region_size * regions_y_count };
+}
+
+void joongwon::ParticleOfLife::printTypesTo(std::ostream &os) const
+{
+    using namespace std;
+    auto previous_flags = os.flags();
+    os << hex << hexfloat;
+
+    // numbers
+    os << types_count_ << endl;
+
+    // color table
+    for (auto &color : color_table_) {
+        os << color.toInteger() << endl;
+    }
+
+    // force table
+    for (auto &force : force_table_) {
+        os << force.a << ' ' << force.b << endl;
+    }
+
+    os.flags(previous_flags);
+}
+
+void joongwon::ParticleOfLife::scanTypesFrom(std::istream &is)
+{
+    using namespace std;
+    auto previous_flags = is.flags();
+    is >> hex >> hexfloat;
+
+    // numbers
+    is >> types_count_;
+    color_table_.resize(types_count_);
+    force_table_.resize(types_count_ * types_count_);
+
+    // color table
+    for (auto &color : color_table_) {
+        sf::Uint32 i;
+        is >> i;
+        color = sf::Color(i);
+    }
+
+    // force table
+    for (auto &force : force_table_) {
+        is >> force.a >> force.b;
+    }
+
+    is.flags(previous_flags);
 }
 
 double joongwon::Force::force(double x) const noexcept
