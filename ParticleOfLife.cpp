@@ -39,10 +39,20 @@ void joongwon::ParticleOfLife::draw(sf::RenderTarget &target, sf::RenderStates s
     for (auto &particle : particles_) {
         if (particle.type == types_count_)
             continue;
-        sf::CircleShape circle(visible_radius);
+        sf::CircleShape circle(visible_radius, 10);
         circle.move(sf::Vector2f(particle.position));
         circle.setFillColor(color_table_[particle.type]);
         target.draw(circle, states);
+
+        sf::Vector2f offset{ 0, 0 };
+        if (particle.position.x > size.x - visible_radius * 2)
+            offset.x = -size.x;
+        if (particle.position.y > size.y - visible_radius * 2)
+            offset.y = -size.y;
+        if (offset.x || offset.y) {
+            circle.move(offset);
+            target.draw(circle, states);
+        }
     }
 }
 
