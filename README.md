@@ -14,7 +14,7 @@ Cellular Automata(세포자동자)를 변형한 것으로, 세포가 격자에 �
 ## 설정
 config.txt에서 값을 수정할 수 있다. 이름: 설명
  * effective_radius: 기본 반발력의 범위
- * friction: 마찰 계수
+ * friction: 마찰의 크기를 결정하는 인자. a = friction일 때, v(t') = v(t) * e^(-a*dt)
  * maximum_fps: 최대 프레임율
  * maximum_interaction_distance: 상호작용의 최대 범위
  * maximum_interaction_strength: 상호작용의 세기를 결정하는 인자의 최대 크기 (값이 클수록 강하다)
