@@ -41,7 +41,7 @@ public:
     double effective_radius = 10.f;
     int regions_x_count = 10, regions_y_count = 10;
     double region_size = 50.f;
-    double friction = 0.01f;
+    double friction_coefficient = 0.01f;
     double maximum_interaction_distance = 40.f;
     double maximum_interaction_strength = 10.f;
     double visible_radius = 5.f;

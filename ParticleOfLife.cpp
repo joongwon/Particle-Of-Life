@@ -123,7 +123,7 @@ void joongwon::ParticleOfLife::configure(const ParticleOfLifeConfig &config)
     regions_x_count = config.regions_x_count;
     regions_y_count = config.regions_y_count;
     region_size = config.region_size;
-    friction = config.friction;
+    friction_coefficient = config.friction;
     maximum_interaction_distance = config.maximum_interaction_distance;
     maximum_interaction_strength = config.maximum_interaction_strength;
     visible_radius = config.visible_radius;
@@ -242,7 +242,8 @@ void joongwon::ParticleOfLife::advance(double dt)
     }
 
     for (auto &particle : particles_) {
-        particle.velocity *= (1 - friction);
+        auto friction = particle.velocity * friction_coefficient * dt;
+        particle.velocity -= friction;
         particle.position += particle.velocity * dt;
         if (particle.position.x < 0)
             particle.position.x += size.x;
