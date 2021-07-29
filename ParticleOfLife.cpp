@@ -187,6 +187,11 @@ void joongwon::ParticleOfLife::generateRandomParticles(int n)
     }
 }
 
+static inline double positive_fmod(double x, double y) {
+    double result = std::fmod(x, y);
+    return result < 0 ? result + y : result;
+}
+
 void joongwon::ParticleOfLife::advance(double dt)
 {
     auto size = get_size();
@@ -202,7 +207,7 @@ void joongwon::ParticleOfLife::advance(double dt)
     }
     region_borders.back() = particles_.size();
 
-#define CONCURRENT
+#define CONCURRENT_ADVANCE
 
     std::vector<std::future<void>> futures;
 
@@ -226,13 +231,13 @@ void joongwon::ParticleOfLife::advance(double dt)
             + (region_borders[region_end] - region_borders[region_end - 1])
             * std::sqrt(((0. + goal - tasks_count[region_end - 1]) / (tasks_count[region_end] - tasks_count[region_end - 1]))));
 
-#ifdef CONCURRENT
+#ifdef CONCURRENT_ADVANCE
         futures.push_back(std::async([=]() {
 #endif
             for (int j = particle_begin; j < particle_end; j++) {
                 accelerate(particles_[j], dt);
             }
-#ifdef CONCURRENT
+#ifdef CONCURRENT_ADVANCE
             }));
 #endif
     }
@@ -245,6 +250,13 @@ void joongwon::ParticleOfLife::advance(double dt)
         auto friction = particle.velocity * friction_coefficient * dt;
         particle.velocity -= friction;
         particle.position += particle.velocity * dt;
+
+#define USE_FMOD
+
+#ifdef USE_FMOD
+        particle.position.x = positive_fmod(particle.position.x, size.x);
+        particle.position.y = positive_fmod(particle.position.y, size.y);
+#else
         if (particle.position.x < 0)
             particle.position.x += size.x;
         else if (particle.position.x >= size.x)
@@ -253,6 +265,7 @@ void joongwon::ParticleOfLife::advance(double dt)
             particle.position.y += size.y;
         else if (particle.position.y >= size.y)
             particle.position.y -= size.y;
+#endif
 
         int xnew = std::floor(particle.position.x / region_size);
         int ynew = std::floor(particle.position.y / region_size);
