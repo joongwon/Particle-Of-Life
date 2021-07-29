@@ -4,6 +4,8 @@
 
 #include <fstream>
 
+using namespace std::literals;
+
 void App::configureLife()
 {
     joongwon::ParticleOfLifeConfig config;
@@ -18,7 +20,7 @@ void App::configureLife()
     types_count = config.type_count;
     particles_count = config.particle_count;
     minimum_frame_length = 1. / config.maximum_fps;
-    maximum_frame_length = minimum_frame_length * 2;
+    maximum_frame_length = 1. / config.minimum_fps;
 }
 
 void App::createWindow()
@@ -31,7 +33,7 @@ void App::createWindow()
         "Particle Of Life",
         sf::Style::Titlebar | sf::Style::Close));
     sf::Image icon;
-    icon.loadFromFile("ParticleOfLife.png");
+    icon.loadFromFile("icon.png");
     auto icon_size = icon.getSize();
     window->setIcon(icon_size.x, icon_size.y, icon.getPixelsPtr());
 }
@@ -84,8 +86,8 @@ void App::addButton(const char *text, std::function<void(joongwon::Button *)> &&
 }
 
 const char *PolFilter =
-"Particle Of Life Type File\0" "*.pol\0"
-"All Files\0" "*.*\0"
+"Particle Of Life Type File (*.pol)\0" "*.pol\0"
+"All Files (*.*)\0" "*.*\0"
 ;
 
 void App::exportParticleTypes()
@@ -94,6 +96,8 @@ void App::exportParticleTypes()
         auto file_name = joongwon::getSaveFileName(PolFilter);
         if (file_name.empty())
             throw 0;
+        if (std::find(file_name.begin(), file_name.end(), '.') == file_name.end())
+            file_name += ".pol";
         std::ofstream stream;
         stream.open(file_name);
         life.printTypesTo(stream);
@@ -130,7 +134,7 @@ void App::init()
     life.generateRandomParticleTypes(types_count);
     life.generateRandomParticles(particles_count);
 
-    font.loadFromFile(R"(C:\WINDOWS\FONTS\AGENCYR.TTF)");
+    font.loadFromFile("font.ttf");
 
     createWindow();
     createInterface();
@@ -160,7 +164,7 @@ void App::runEventLoop()
                 else
                     life.advance(seconds);
                 int fps = std::round(1 / seconds);
-                fps_display.setString(std::to_string(fps));
+                fps_display.setString("FPS: "s + std::to_string(fps));
                 seconds = 0.f;
             }
         }

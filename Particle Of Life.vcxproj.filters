@@ -52,7 +52,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="ParticleOfLife.png">
+    <Image Include="icon.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -65,5 +65,10 @@
     <None Include="README.md">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="font.ttf">
+      <Filter>Resource Files</Filter>
+    </Font>
   </ItemGroup>
 </Project>

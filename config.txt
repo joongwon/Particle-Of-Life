@@ -9,5 +9,6 @@ friction = 0.03
 stablized_zone = 1
 type_count = 5
 particle_count = 3000
-maximum_fps = 120
+maximum_fps = 240
+minimum_fps = 30
 visible_radius = 5

@@ -40,6 +40,7 @@ void joongwon::ParticleOfLifeConfig::load_from_file(const std::string &file_name
             ASSIGN(particle_count)
             ASSIGN(maximum_fps)
             ASSIGN(visible_radius)
+            ASSIGN(minimum_fps)
         END_ASSIGN()
     }
 }

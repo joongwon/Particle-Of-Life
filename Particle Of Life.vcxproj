@@ -34,13 +34,16 @@
     <ClInclude Include="ParticleOfLifeConfig.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="ParticleOfLife.png" />
+    <Image Include="icon.png" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="font.ttf" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
