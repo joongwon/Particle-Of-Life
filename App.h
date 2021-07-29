@@ -27,7 +27,9 @@ class App
     std::atomic_bool pause;
     std::vector<std::unique_ptr<joongwon::Button>> buttons;
     float seconds = 0;
-    sf::Clock frame_counter;
+    sf::Clock interframe_clock;
+    sf::Clock fps_clock;
+    int frames = 0;
     sf::RectangleShape button_background;
     double minimum_frame_length;
     double maximum_frame_length;

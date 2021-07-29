@@ -60,7 +60,10 @@ void App::createInterface()
     });
     addButton("Pause", [this](joongwon::Button *button) {
         pause = !pause;
-        frame_counter.restart();
+        seconds = 0;
+        frames = 0;
+        interframe_clock.restart();
+        fps_clock.restart();
         button->text.setString(pause ? "Resume" : "Pause");
     });
     button_background.setPosition({ ButtonLeftMargin, ButtonTopMargin });
@@ -145,7 +148,7 @@ void App::init()
 
 void App::runEventLoop()
 {
-    frame_counter.restart();
+    interframe_clock.restart();
     while (window->isOpen()) {
         sf::Event event;
         while (window->pollEvent(event)) {
@@ -157,14 +160,17 @@ void App::runEventLoop()
         }
 
         if (!pause) {
-            seconds += frame_counter.restart().asSeconds();
+            seconds += interframe_clock.restart().asSeconds();
             if (seconds >= minimum_frame_length) {
                 if (seconds > maximum_frame_length)
                     life.advance(maximum_frame_length);
                 else
                     life.advance(seconds);
-                int fps = std::round(1 / seconds);
-                fps_display.setString("FPS: "s + std::to_string(fps));
+                frames++;
+                if (fps_clock.getElapsedTime() >= sf::seconds(1)) {
+                    fps_display.setString("FPS: "s + std::to_string(static_cast<int>(frames / fps_clock.restart().asSeconds())));
+                    frames = 0;
+                }
                 seconds = 0.f;
             }
         }
