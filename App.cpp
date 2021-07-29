@@ -148,6 +148,7 @@ void App::init()
 
 void App::runEventLoop()
 {
+    fps_clock.restart();
     interframe_clock.restart();
     while (window->isOpen()) {
         sf::Event event;
