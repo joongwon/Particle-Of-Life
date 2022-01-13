@@ -4,39 +4,38 @@
 #include <cmath>
 #include <utility>
 #include <future>
-#include <numeric>
 
 
 #undef NDEBUG
-#include <cassert>
+
+#include <istream>
 
 #pragma warning(disable: 26451)
 
 
 static std::default_random_engine random_engine(std::random_device{}());
 
-void joongwon::ParticleOfLife::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
+void joongwon::ParticleOfLife::draw(sf::RenderTarget &target, sf::RenderStates states) const {
     states.transform *= getTransform();
 
     auto size = get_size();
-    sf::RectangleShape rect({ static_cast<float>(size.x), static_cast<float>(size.y) });
+    sf::RectangleShape rect({static_cast<float>(size.x), static_cast<float>(size.y)});
     rect.setFillColor(sf::Color::Black);
     target.draw(rect, states);
 
     sf::VertexArray va(sf::PrimitiveType::Lines);
     sf::Color grey(0x80, 0x80, 0x80);
     for (int i = 1; i < regions_x_count; i++) {
-        va.append(sf::Vertex({ static_cast<float>(i * region_size), 0 }, grey));
-        va.append(sf::Vertex({ static_cast<float>(i * region_size), static_cast<float>(size.y) }, grey));
+        va.append(sf::Vertex({static_cast<float>(i * region_size), 0}, grey));
+        va.append(sf::Vertex({static_cast<float>(i * region_size), static_cast<float>(size.y)}, grey));
     }
     for (int i = 1; i < regions_y_count; i++) {
-        va.append(sf::Vertex({ 0, static_cast<float>(i * region_size) }, grey));
-        va.append(sf::Vertex({ static_cast<float>(size.x), static_cast<float>(i * region_size) }, grey));
+        va.append(sf::Vertex({0, static_cast<float>(i * region_size)}, grey));
+        va.append(sf::Vertex({static_cast<float>(size.x), static_cast<float>(i * region_size)}, grey));
     }
     target.draw(va, states);
 
-    for (auto &particle : particles_) {
+    for (auto &particle: particles_) {
         if (particle.type == types_count_)
             continue;
         sf::CircleShape circle(visible_radius, 10);
@@ -44,7 +43,7 @@ void joongwon::ParticleOfLife::draw(sf::RenderTarget &target, sf::RenderStates s
         circle.setFillColor(color_table_[particle.type]);
         target.draw(circle, states);
 
-        sf::Vector2f offset{ 0, 0 };
+        sf::Vector2f offset{0, 0};
         if (particle.position.x > size.x - visible_radius * 2)
             offset.x = -size.x;
         if (particle.position.y > size.y - visible_radius * 2)
@@ -56,8 +55,7 @@ void joongwon::ParticleOfLife::draw(sf::RenderTarget &target, sf::RenderStates s
     }
 }
 
-joongwon::Vector2d joongwon::ParticleOfLife::acceleration(const Particle &p1, const Particle &p2) const noexcept
-{
+joongwon::Vector2d joongwon::ParticleOfLife::acceleration(const Particle &p1, const Particle &p2) const noexcept {
     auto d = p1.position - p2.position;
 
     double x = std::sqrt(d.x * d.x + d.y * d.y);
@@ -69,25 +67,22 @@ joongwon::Vector2d joongwon::ParticleOfLife::acceleration(const Particle &p1, co
     else if (x > 0)
         magnitude = repulsion_strength * (effective_radius - x);
     else
-        return { 0.f, 0.f };
+        return {0.f, 0.f};
     return d * (magnitude / x);
 }
 
-void joongwon::ParticleOfLife::accelerate(Particle &particle, double dt)
-{
+void joongwon::ParticleOfLife::accelerate(Particle &particle, double dt) {
     auto size = get_size();
     int x = std::floor(particle.position.x / region_size);
     int y = std::floor(particle.position.y / region_size);
-    int i = y * regions_x_count + x;
     for (int xd = -1; xd <= 1; xd++)
         for (int yd = -1; yd <= 1; yd++) {
-            Vector2d offset = { 0.f,0.f };
+            Vector2d offset = {0.f, 0.f};
             int xyou = x + xd;
             if (xyou < 0) {
                 xyou += regions_x_count;
                 offset.x += size.x;
-            }
-            else if (xyou >= regions_x_count) {
+            } else if (xyou >= regions_x_count) {
                 xyou -= regions_x_count;
                 offset.x -= size.x;
             }
@@ -95,8 +90,7 @@ void joongwon::ParticleOfLife::accelerate(Particle &particle, double dt)
             if (yyou < 0) {
                 yyou += regions_y_count;
                 offset.y += size.y;
-            }
-            else if (yyou >= regions_y_count) {
+            } else if (yyou >= regions_y_count) {
                 yyou -= regions_y_count;
                 offset.y -= size.y;
             }
@@ -111,12 +105,9 @@ void joongwon::ParticleOfLife::accelerate(Particle &particle, double dt)
         }
 }
 
-joongwon::ParticleOfLife::ParticleOfLife()
-{
-}
+joongwon::ParticleOfLife::ParticleOfLife() = default;
 
-void joongwon::ParticleOfLife::configure(const ParticleOfLifeConfig &config)
-{
+void joongwon::ParticleOfLife::configure(const ParticleOfLifeConfig &config) {
     repulsion_strength = config.repulsion_strength;
     stablized_zone = config.stablized_zone;
     effective_radius = config.effective_radius;
@@ -129,24 +120,32 @@ void joongwon::ParticleOfLife::configure(const ParticleOfLifeConfig &config)
     visible_radius = config.visible_radius;
 }
 
-void joongwon::ParticleOfLife::generateRandomParticleTypes(int n)
-{
+class MyMessagedException : public std::exception {
+    std::string message;
+public:
+    explicit MyMessagedException(std::string message) : message(std::move(message)) {}
+
+    [[nodiscard]] const char *what() const noexcept override;
+};
+
+const char *MyMessagedException::what() const noexcept {
+    return message.c_str();
+}
+
+void joongwon::ParticleOfLife::generateRandomParticleTypes(int n) {
     if (region_size - effective_radius - stablized_zone < maximum_interaction_distance) {
-        throw std::exception("invalid maximum effective distance");
+        throw MyMessagedException("invalid maximum effective distance");
     }
     types_count_ = n;
     force_table_.clear();
     color_table_.clear();
 
     std::uniform_real_distribution<> dist_scale(-1, 1);
-    std::uniform_real_distribution<float> dist_distance(0, maximum_interaction_distance);
+    std::uniform_real_distribution<double> dist_distance(0, maximum_interaction_distance);
     std::uniform_int_distribution<std::uint32_t> dist_color;
 
     for (int i = 0; i < n * n; i++) {
-        force_table_.emplace_back(
-            dist_scale(random_engine) * maximum_interaction_strength,
-            dist_distance(random_engine)
-        );
+        force_table_.push_back({dist_scale(random_engine) * maximum_interaction_strength,dist_distance(random_engine)});
     }
     for (int i = 0; i < n; i++) {
         auto &a = force_table_[i * (n + 1)].a;
@@ -158,16 +157,15 @@ void joongwon::ParticleOfLife::generateRandomParticleTypes(int n)
     for (int i = 0; i < n; i++) {
         auto c = dist_color(random_engine);
         c |= 0x80808080;
-        sf::Color color{ c };
+        sf::Color color{c};
         color.a = 255;
-        color_table_.push_back(std::move(color));
+        color_table_.push_back(color);
     }
 
     region_borders.clear();
 }
 
-void joongwon::ParticleOfLife::generateRandomParticles(int n)
-{
+void joongwon::ParticleOfLife::generateRandomParticles(int n) {
     particles_.clear();
 
     std::uniform_real_distribution<double> dist_x(0, regions_x_count * region_size);
@@ -175,9 +173,9 @@ void joongwon::ParticleOfLife::generateRandomParticles(int n)
     std::uniform_int_distribution<> dist_type(0, types_count_ - 1);
     for (int i = 0; i < n; i++) {
         Particle particle{
-            .type = dist_type(random_engine),
-            .position = {dist_x(random_engine), dist_y(random_engine)},
-            .velocity = {0,0}
+                .type = dist_type(random_engine),
+                .position = {dist_x(random_engine), dist_y(random_engine)},
+                .velocity = {0, 0}
         };
         int xnew = std::floor(particle.position.x / region_size);
         int ynew = std::floor(particle.position.y / region_size);
@@ -192,8 +190,7 @@ static inline double positive_fmod(double x, double y) {
     return result < 0 ? result + y : result;
 }
 
-void joongwon::ParticleOfLife::advance(double dt)
-{
+void joongwon::ParticleOfLife::advance(double dt) {
     auto size = get_size();
 
     std::sort(particles_.begin(), particles_.end(), [](auto a, auto b) { return a.region < b.region; });
@@ -212,24 +209,24 @@ void joongwon::ParticleOfLife::advance(double dt)
     std::vector<std::future<void>> futures;
 
     int n = std::thread::hardware_concurrency() * 3;
-    std::vector<int> tasks_count = { 0 };
+    std::vector<int> tasks_count = {0};
     for (int i = 1; i < region_borders.size(); i++) {
-        int region_size = region_borders[i] - region_borders[i - 1];
-        tasks_count.push_back(tasks_count.back() + region_size * region_size);
+        int region_width = region_borders[i] - region_borders[i - 1];
+        tasks_count.push_back(tasks_count.back() + region_width * region_width);
     }
 
-    int region_begin, region_end = 0;
+    int region_end = 0;
     int particle_begin, particle_end = 0;
     for (int i = 0; i < n; i++) {
-        region_begin = region_end;
         int goal = tasks_count.back() * (i + 1) / n;
         for (; tasks_count[region_end] < goal; region_end++)
             continue;
 
         particle_begin = particle_end;
         particle_end = std::floor(region_borders[region_end - 1]
-            + (region_borders[region_end] - region_borders[region_end - 1])
-            * std::sqrt(((0. + goal - tasks_count[region_end - 1]) / (tasks_count[region_end] - tasks_count[region_end - 1]))));
+                                  + (region_borders[region_end] - region_borders[region_end - 1])
+                                    * std::sqrt(
+                ((0. + goal - tasks_count[region_end - 1]) / (tasks_count[region_end] - tasks_count[region_end - 1]))));
 
 #ifdef CONCURRENT_ADVANCE
         futures.push_back(std::async([=]() {
@@ -238,7 +235,7 @@ void joongwon::ParticleOfLife::advance(double dt)
                 accelerate(particles_[j], dt);
             }
 #ifdef CONCURRENT_ADVANCE
-            }));
+        }));
 #endif
     }
     while (!futures.empty()) {
@@ -246,7 +243,7 @@ void joongwon::ParticleOfLife::advance(double dt)
         futures.pop_back();
     }
 
-    for (auto &particle : particles_) {
+    for (auto &particle: particles_) {
         auto friction = particle.velocity * friction_coefficient * dt;
         particle.velocity -= friction;
         particle.position += particle.velocity * dt;
@@ -274,19 +271,16 @@ void joongwon::ParticleOfLife::advance(double dt)
     }
 }
 
-joongwon::Vector2d joongwon::ParticleOfLife::get_window_size() const noexcept
-{
+joongwon::Vector2d joongwon::ParticleOfLife::get_window_size() const noexcept {
     auto scale = getScale();
-    return { scale.x * region_size * regions_x_count, scale.y * region_size * regions_y_count };
+    return {scale.x * region_size * regions_x_count, scale.y * region_size * regions_y_count};
 }
 
-joongwon::Vector2d joongwon::ParticleOfLife::get_size() const noexcept
-{
-    return { region_size * regions_x_count, region_size * regions_y_count };
+joongwon::Vector2d joongwon::ParticleOfLife::get_size() const noexcept {
+    return {region_size * regions_x_count, region_size * regions_y_count};
 }
 
-void joongwon::ParticleOfLife::printTypesTo(std::ostream &os) const
-{
+void joongwon::ParticleOfLife::printTypesTo(std::ostream &os) const {
     using namespace std;
     auto previous_flags = os.flags();
     os << hex << hexfloat;
@@ -295,20 +289,19 @@ void joongwon::ParticleOfLife::printTypesTo(std::ostream &os) const
     os << types_count_ << endl;
 
     // color table
-    for (auto &color : color_table_) {
+    for (auto &color: color_table_) {
         os << color.toInteger() << endl;
     }
 
     // force table
-    for (auto &force : force_table_) {
+    for (auto &force: force_table_) {
         os << force.a << ' ' << force.b << endl;
     }
 
     os.flags(previous_flags);
 }
 
-void joongwon::ParticleOfLife::scanTypesFrom(std::istream &is)
-{
+void joongwon::ParticleOfLife::scanTypesFrom(std::istream &is) {
     using namespace std;
     auto previous_flags = is.flags();
     is >> hex >> hexfloat;
@@ -319,21 +312,20 @@ void joongwon::ParticleOfLife::scanTypesFrom(std::istream &is)
     force_table_.resize(types_count_ * types_count_);
 
     // color table
-    for (auto &color : color_table_) {
+    for (auto &color: color_table_) {
         sf::Uint32 i;
         is >> i;
         color = sf::Color(i);
     }
 
     // force table
-    for (auto &force : force_table_) {
+    for (auto &force: force_table_) {
         is >> force.a >> force.b;
     }
 
     is.flags(previous_flags);
 }
 
-double joongwon::Force::force(double x) const noexcept
-{
+double joongwon::Force::force(double x) const noexcept {
     return std::max(0., std::min(x, b - x)) * a;
 }

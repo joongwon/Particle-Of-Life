@@ -1,8 +1,9 @@
 #include "apicall.h"
-#include <Windows.h>
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #include <algorithm>
 #include <numeric>
-
+#include <Windows.h>
 void joongwon::showErrorMessageBox(const std::string & message)
 {
     MessageBoxA(NULL, message.c_str(), "Error", MB_OK | MB_ICONERROR);
@@ -55,3 +56,41 @@ std::string joongwon::getOpenFileName(const char *filter)
     else
         return "";
 }
+#elif __linux__
+
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+
+std::string joongwon::getOpenFileName(const char *filter) {
+    auto f = popen("zenity --file-selection", "r");
+    char filename[1024];
+    fgets(filename, 1024, f);
+    int ret = pclose(f);
+    std::cout << "filename: " << filename << std::endl;
+    if (ret == 0)
+        return filename;
+    else
+        return "";
+}
+
+std::string joongwon::getSaveFileName(const char *filter) {
+    auto f = popen("zenity --file-selection --save", "r");
+    char filename[1024];
+    fgets(filename, 1024, f);
+    int ret = pclose(f);
+    std::cout << "filename: " << filename << std::endl;
+    if (ret == 0)
+        return filename;
+    else
+        return "";
+}
+
+void joongwon::showErrorMessageBox(const std::string &message) {
+    auto command = "zenity --error --text \"" + message + "\"";
+    std::system(command.c_str());
+}
+
+#else
+#error "unknown compiler"
+#endif
